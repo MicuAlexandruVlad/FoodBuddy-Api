@@ -18,7 +18,6 @@ router.post('/upload-user-image', function(req, res, next) {
     var isProfileImage = req.body.isProfileImage;
     var normalProfileImageData = req.body.normalProfileImageData;
     var smallProfileImageData = req.body.smallProfileImageData;
-    var galleryImageData = req.body.galleryImageData;
 
     userImage.userId = userId;
     userImage.isProfileImage = isProfileImage;
@@ -30,8 +29,8 @@ router.post('/upload-user-image', function(req, res, next) {
     }
     if (userImage.isProfileImage) {
 
-      var smallProfilePath = dir + '/' + imageName + '_small';
-      var normalProfilePath = dir + '/' + imageName + '_normal';
+      var smallProfilePath = dir + '/' + imageName + '_small.jpg';
+      var normalProfilePath = dir + '/' + imageName + '_normal.jpg';
       writeImageDataToFile(smallProfilePath, smallProfileImageData);
       writeImageDataToFile(normalProfilePath, normalProfileImageData);
       userImage.smallProfileImagePath = smallProfilePath;
@@ -44,9 +43,27 @@ router.post('/upload-user-image', function(req, res, next) {
     }
 });
 
+router.get('/profile-small/:userId/images/:imageId/', function(req, res, next){
+  console.log(req.params.userId);
+  console.log(req.params.imageId);
+  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }).then(function(imageRes) {
+      res.sendFile(imageRes.smallProfileImagePath);
+  });
+  
+});
+
+router.get('/profile-normal/:userId/images/:imageId/', function(req, res, next){
+  console.log(req.params.userId);
+  console.log(req.params.imageId);
+  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }).then(function(imageRes) {
+      res.sendFile(imageRes.normalProfileImagePath);
+  });
+  
+});
+
 function writeImageDataToFile(path, data) {
   console.log(data);
-  fs.writeFileSync(path, data, function(err) {
+  fs.writeFileSync(path, data, "base64", function(err) {
     if (err) {
       console.log('Error writing to file');
     }
@@ -54,6 +71,11 @@ function writeImageDataToFile(path, data) {
       console.log('File written');
     }
   });
+}
+
+function readFromFile(path) {
+  var text = fs.readFileSync(path, "base64");
+  return text;
 }
 
 module.exports = router;
