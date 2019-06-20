@@ -30,8 +30,8 @@ router.post('/upload-user-image', function(req, res, next) {
     }
     if (userImage.isProfileImage) {
 
-      var smallProfilePath = dir + '/' + imageName + '_small.jpg';
-      var normalProfilePath = dir + '/' + imageName + '_normal.jpg';
+      var smallProfilePath = dir + '/' + imageName + '_small';
+      var normalProfilePath = dir + '/' + imageName + '_normal';
       writeImageDataToFile(smallProfilePath, smallProfileImageData);
       writeImageDataToFile(normalProfilePath, normalProfileImageData);
       userImage.smallProfileImagePath = smallProfilePath;
@@ -45,8 +45,8 @@ router.post('/upload-user-image', function(req, res, next) {
 });
 
 function writeImageDataToFile(path, data) {
-  var decodedData = atob(data);
-  fs.writeFileSync(path, decodedData, "binary", function(err) {
+  console.log(data);
+  fs.writeFileSync(path, data, function(err) {
     if (err) {
       console.log('Error writing to file');
     }

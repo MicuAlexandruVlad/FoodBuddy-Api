@@ -1,10 +1,13 @@
 var express = require('express');
 var router = express.Router();
 var app = express();
+var fs = require('fs');
 var mongo = require('mongodb')
 var mongoose = require('mongoose');
 var User = require('../models/User')
 var UserModel = mongoose.model('User', User.UserSchema);
+var UserImage = require('../models/UserImage')
+var UserImageModel = mongoose.model('UserImage', UserImage.UserImageSchema);
 var httpStatus = require('http-status-codes');
 
 /* GET users listing. */
@@ -88,5 +91,46 @@ router.post('/update-user-data', function(req, res, next) {
     });
   }).catch(next);
 });
+
+router.get('/users-discover-5', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var maxAge = req.query.userMaxAge;
+  var limit = parseInt(req.query.limit);
+
+  UserModel.find({ $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge } } ] }, { password: 0 }).limit(limit).then(function(userArray) {
+       if (userArray.length === 0) {
+        res.json({ status: httpStatus.NO_CONTENT, users: userArray });
+       }
+       else {
+        
+        var ids = []
+        for (let index = 0; index < userArray.length; index++) {
+          const user = userArray[index];
+          ids[index] = user._id;
+        }
+        UserImageModel.find({ userId: { $in: ids } }).then(function(userImageArray) {
+          console.log(userImageArray.length);  
+          var imageDataArray = []
+          for (let index = 0; index < userImageArray.length; index++) {
+            const image = userImageArray[index];
+            var smallImagePath = image.smallProfileImagePath;
+            userImageArray[index].smallProfileImagePath = readFromFile(smallImagePath);            
+            userImageArray[index].normalProfileImagePath = '';
+            userImageArray[index].galleryImagePath = '';
+          }
+          res.json({ status: httpStatus.OK, users: userArray, userImages: userImageArray });
+        });
+       }
+    });
+});
+
+function readFromFile(path) {
+  var text = fs.readFileSync(path, "utf-8");
+  return text;
+}
 
 module.exports = router;
