@@ -23,7 +23,7 @@ router.post('/upload-user-image', function(req, res, next) {
     userImage.isProfileImage = isProfileImage;
     userImage.imageName = imageName;
     
-    var dir = 'C:/Users/micua/Desktop/FoodBuddy/user_image_data/' + userId;
+    var dir = 'C:/Users/micua/Desktop/FoodBuddy Image Data/user_image_data/' + userId;
     if(!fs.existsSync(dir)) {
       fs.mkdirSync(dir);
     }
@@ -46,7 +46,8 @@ router.post('/upload-user-image', function(req, res, next) {
 router.get('/profile-small/:userId/images/:imageId/', function(req, res, next){
   console.log(req.params.userId);
   console.log(req.params.imageId);
-  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }).then(function(imageRes) {
+  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }, 
+  { __v: 0, createdAt: 0, updatedAt: 0, galleryImagePath: 0 }).then(function(imageRes) {
       res.sendFile(imageRes.smallProfileImagePath);
   });
   
@@ -55,7 +56,8 @@ router.get('/profile-small/:userId/images/:imageId/', function(req, res, next){
 router.get('/profile-normal/:userId/images/:imageId/', function(req, res, next){
   console.log(req.params.userId);
   console.log(req.params.imageId);
-  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }).then(function(imageRes) {
+  UserImageModel.findOne({ _id: new mongo.ObjectID(req.params.imageId) }, 
+  { __v: 0, createdAt: 0, updatedAt: 0, galleryImagePath: 0 }).then(function(imageRes) {
       res.sendFile(imageRes.normalProfileImagePath);
   });
   

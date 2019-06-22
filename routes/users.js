@@ -92,7 +92,7 @@ router.post('/update-user-data', function(req, res, next) {
   }).catch(next);
 });
 
-router.get('/users-discover-5', function(req, res, next) {
+router.get('/users-discover-filter', function(req, res, next) {
   var city = req.query.userCity;
   var country = req.query.userCountry;
   var preferredGender = req.query.userPreferredGender;
@@ -100,8 +100,113 @@ router.get('/users-discover-5', function(req, res, next) {
   var maxAge = req.query.userMaxAge;
   var limit = parseInt(req.query.limit);
 
-  UserModel.find({ $and: [ { city: city, country: country, gender: preferredGender,
-    age: { $gte: minAge, $lte: maxAge } } ] }, { password: 0 }).limit(limit).then(function(userArray) {
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge } } ] };
+  queryDiscover(filter, limit, res);
+  
+});
+
+router.get('/full-filter', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var maxAge = req.query.userMaxAge;
+  var isStudent = req.query.isStudent.split('^');
+  var collegeName = req.query.collegeName;
+  var zodiacSigns = req.query.zodiac.split('^');
+  var limit = parseInt(req.query.limit);
+
+  for (let index = 0; index < isStudent.length; index++) {
+    const bool = isStudent[index];
+    isStudent[index] = (bool == 'true');
+  }
+
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge }, student: { $in: isStudent }, college: collegeName, zodiac: { $in: zodiacSigns } } ] };
+  queryDiscover(filter, limit, res);
+});
+
+router.get('/zodiac-only-filter', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var maxAge = req.query.userMaxAge;
+  var zodiacSigns = req.query.zodiac.split('^');
+  var limit = parseInt(req.query.limit);
+
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge }, zodiac: { $in: zodiacSigns } } ] };
+  queryDiscover(filter, limit, res);
+});
+
+router.get('/student-only-no-college-filter', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var maxAge = req.query.userMaxAge;
+  var isStudent = req.query.isStudent.split('^');
+  var limit = parseInt(req.query.limit);
+
+  for (let index = 0; index < isStudent.length; index++) {
+    const bool = isStudent[index];
+    isStudent[index] = (bool == 'true');
+  }
+
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge }, student: { $in: isStudent } } ] };
+  queryDiscover(filter, limit, res);
+});
+
+router.get('/student-college-filter', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var collegeName = req.query.collegeName;
+  var maxAge = req.query.userMaxAge;
+  var isStudent = req.query.isStudent.split('^');
+  var limit = parseInt(req.query.limit);
+
+  for (let index = 0; index < isStudent.length; index++) {
+    const bool = isStudent[index];
+    isStudent[index] = (bool == 'true');
+  }
+
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge }, student: { $in: isStudent }, college: collegeName } ] };
+  queryDiscover(filter, limit, res);
+});
+
+router.get('/student-zodiac-no-college-filter', function(req, res, next) {
+  var city = req.query.userCity;
+  var country = req.query.userCountry;
+  var preferredGender = req.query.userPreferredGender;
+  var minAge = req.query.userMinAge;
+  var maxAge = req.query.userMaxAge;
+  var isStudent = req.query.isStudent.split('^');
+  var limit = parseInt(req.query.limit);
+  var zodiacSigns = req.query.zodiac.split('^');
+
+  for (let index = 0; index < isStudent.length; index++) {
+    const bool = isStudent[index];
+    isStudent[index] = (bool == 'true');
+  }
+
+  var filter = { $and: [ { city: city, country: country, gender: preferredGender,
+    age: { $gte: minAge, $lte: maxAge }, student: { $in: isStudent }, zodiac: { $in: zodiacSigns } } ] };
+  queryDiscover(filter, limit, res);
+});
+
+function readFromFile(path) {
+  var text = fs.readFileSync(path, "utf-8");
+  return text;
+}
+
+function queryDiscover(filter, limit, res) {
+  UserModel.find(filter, { password: 0 }).limit(limit).then(function(userArray) {
        if (userArray.length === 0) {
         res.json({ status: httpStatus.NO_CONTENT, users: userArray });
        }
@@ -112,16 +217,11 @@ router.get('/users-discover-5', function(req, res, next) {
           const user = userArray[index];
           ids[index] = user._id;
         }
-        UserImageModel.find({ userId: { $in: ids } }).then(function(userImageArray) {
+        UserImageModel.find({ userId: { $in: ids }, isProfileImage: true }).then(function(userImageArray) {
           res.json({ status: httpStatus.OK, users: userArray, userImages: userImageArray });
         });
        }
     });
-});
-
-function readFromFile(path) {
-  var text = fs.readFileSync(path, "utf-8");
-  return text;
 }
 
 module.exports = router;
