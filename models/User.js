@@ -21,7 +21,8 @@ var UserSchema = new mongoose.Schema({
     profileSetupComplete: { type: Boolean },
     student: { type: Boolean },
     zodiac: { type: String },
-    college: { type: String }
+    college: { type: String },
+    deviceToken: { type: String }
 
   }, {timestamps: true});
 

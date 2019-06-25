@@ -51,6 +51,7 @@ router.post('/register-user-email', (req, res, next) => {
       user.student = req.body.student;
       user.zodiac = req.body.zodiac;
       user.college = req.body.college;
+      user.deviceToken = req.body.deviceToken;
 
       user.save().then(function(user) {
         console.log('User saved with id ' + user.id);
@@ -84,6 +85,7 @@ router.post('/update-user-data', function(req, res, next) {
     user.student = req.body.student;
     user.zodiac = req.body.zodiac;
     user.college = req.body.college;
+    user.deviceToken = req.body.deviceToken;
 
     user.save().then(function(user) {
       console.log('User saved with id ' + user.id);

@@ -4,6 +4,9 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var MongoClient = require('mongodb').MongoClient
 var logger = require('morgan');
+var admin = require('firebase-admin');
+var gson = require('gson');
+
 
 const mongoose = require('mongoose');
 
@@ -12,6 +15,17 @@ var usersRouter = require('./routes/users');
 var userImagesRouter = require('./routes/user-images');
 
 var app = express();
+var server = app.listen(4000);
+var io = require('socket.io').listen(server);
+
+var serviceAccount = require("./foodbuddy-9d4a9-firebase-adminsdk-9vuuo-8036f05386.json")
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://foodbuddy-9d4a9.firebaseio.com"
+});
+
+var defaultMessaging = admin.messaging();
 
 mongoose.connect('mongodb://:@localhost:27017/FoodBuddy', { useNewUrlParser: true });
 
@@ -45,6 +59,32 @@ app.use(function(err, req, res, next) {
   // render the error page
   res.status(err.status || 500);
   res.render('error');
+});
+
+io.on('connection', function(socket) {
+  console.log('User connected -> ' + socket.id);
+  socket.on('chat', function(message) {
+    if (message.type == 1) {
+      // text message
+      console.log(message);
+      var payload = {
+        data: {
+          data: gson.stringify(message)
+        },
+        topic: message.conversationId,
+      };
+
+      defaultMessaging.send(payload)
+        .then((response) => {
+          // Response is a message ID string.
+          console.log('Successfully sent message:', response);
+        })
+        .catch((error) => {
+          console.log('Error sending message:', error);
+        });
+    }
+
+  });
 });
 
 module.exports = app;
