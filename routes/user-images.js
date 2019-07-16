@@ -60,7 +60,16 @@ router.get('/profile-normal/:userId/images/:imageId/', function(req, res, next){
   { __v: 0, createdAt: 0, updatedAt: 0, galleryImagePath: 0 }).then(function(imageRes) {
       res.sendFile(imageRes.normalProfileImagePath);
   });
-  
+});
+
+router.get('/get-profile-photo-by-id', function(req, res, next) {
+  var ids = req.query.ids.split('_')
+
+  UserImageModel.find({ userId: { $in: ids }, isProfileImage: true },
+     { smallProfileImagePath: 1, userId: 1 })
+     .then(function(imagesRes) {
+        res.json({ status: httpStatus.OK, userImages: imagesRes});      
+     });
 });
 
 function writeImageDataToFile(path, data) {

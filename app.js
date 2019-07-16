@@ -13,6 +13,7 @@ const mongoose = require('mongoose');
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 var userImagesRouter = require('./routes/user-images');
+var userStatus = require('./routes/user-status');
 
 var app = express();
 var server = app.listen(4000);
@@ -43,6 +44,7 @@ app.use('/static', express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/user-images', userImagesRouter);
+app.use('/user-status', userStatus);
 
 
 // catch 404 and forward to error handler
@@ -84,6 +86,11 @@ io.on('connection', function(socket) {
         });
     }
 
+  });
+
+  socket.on('status-change', function(data) {
+    io.emit('user-' + data.userId + '-status-changed', data);
+    console.log(data);
   });
 });
 

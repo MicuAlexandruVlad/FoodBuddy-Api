@@ -8,6 +8,8 @@ var User = require('../models/User')
 var UserModel = mongoose.model('User', User.UserSchema);
 var UserImage = require('../models/UserImage')
 var UserImageModel = mongoose.model('UserImage', UserImage.UserImageSchema);
+var UserStatus = require('../models/UserStatus')
+var UserStatusModel = mongoose.model('UserStatusSchema', UserStatus.UserStatusSchema);
 var httpStatus = require('http-status-codes');
 
 /* GET users listing. */
@@ -54,6 +56,11 @@ router.post('/register-user-email', (req, res, next) => {
       user.deviceToken = req.body.deviceToken;
 
       user.save().then(function(user) {
+        var userStatus = new UserStatusModel();
+        userStatus.referencedUserId = user.id;
+        userStatus.status = 0;
+        userStatus.changedAt = '';
+        userStatus.save();
         console.log('User saved with id ' + user.id);
         res.json({ status: httpStatus.CREATED, id: user.id });
       });
@@ -206,6 +213,21 @@ function readFromFile(path) {
   var text = fs.readFileSync(path, "utf-8");
   return text;
 }
+
+router.get('/get-user-by-id', function(req, res, next) {
+  var ids = req.query.ids.split('_')
+
+  for (let index = 0; index < ids.length; index++) {
+    var id = ids[index];
+    id = new mongo.ObjectID(id);
+    ids[index] = id
+  }
+
+  UserModel.find({ _id: { $in: ids } }, { email: 0, password: 0, createdAt:0, updatedAt: 0, __v: 0 })
+     .then(function(userRes) {
+        res.json({ status: httpStatus.OK, users: userRes});      
+     });
+});
 
 function queryDiscover(filter, limit, res) {
   UserModel.find(filter, { password: 0 }).limit(limit).then(function(userArray) {

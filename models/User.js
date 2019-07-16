@@ -22,7 +22,6 @@ var UserSchema = new mongoose.Schema({
     student: { type: Boolean },
     zodiac: { type: String },
     college: { type: String },
-    deviceToken: { type: String }
 
   }, {timestamps: true});
 
